@@ -139,6 +139,35 @@ fn glob_semantics() {
     assert!(glob(&["a", "*"], &s("a/b")));
     assert!(!glob(&["a", "*"], &s("a")));
     assert!(!glob(&["a", "*"], &s("a/b/c")));
+    // Wildcards skip hidden segments; literal ones still match.
+    assert!(!glob(&["a", "*"], &s("a/.b")));
+    assert!(!glob(
+        &["**", "node_modules"],
+        &s(".nvm/versions/node/v22/lib/node_modules")
+    ));
+    assert!(!glob(
+        &["**", "node_modules"],
+        &s("code/.cache/node_modules")
+    ));
+    assert!(glob(&[".npm", "_cacache"], &s(".npm/_cacache")));
+}
+
+#[test]
+fn global_node_installs_are_not_node_modules_items() {
+    let r = roots();
+    let id = |p: &str| match_path(Path::new(p), &r).map(|r| r.id);
+    for p in [
+        "/r/Users/tester/.nvm/versions/node/v22.22.0/lib/node_modules",
+        "/r/Users/tester/.volta/tools/image/node/22.0.0/lib/node_modules",
+        "/r/Users/tester/.vscode/extensions/foo/node_modules",
+    ] {
+        assert_eq!(id(p), None, "{p}");
+    }
+    assert_eq!(
+        id("/r/Users/tester/Library/pnpm/global/5/node_modules"),
+        Some("pnpm_global")
+    );
+    assert_eq!(id("/r/Users/tester/Library/pnpm/store"), Some("pnpm_store"));
 }
 
 #[test]

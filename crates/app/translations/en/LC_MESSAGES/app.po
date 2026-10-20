@@ -378,6 +378,9 @@ msgstr "Stopped containers; their writable data is lost."
 msgid "rule.docker_volumes.why"
 msgstr "Volumes may hold local database data."
 
+msgid "rule.pnpm_global.why"
+msgstr "Global pnpm packages; their commands stop working without them."
+
 msgid "rule.npm_cache.why"
 msgstr "npm download cache; refilled by npm install."
 

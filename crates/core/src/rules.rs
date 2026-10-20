@@ -135,6 +135,8 @@ static RULES: &[Rule] = &[
     rule!("var_folders", AppsSystem, root("private/var/folders"), DoNotTouch),
     rule!("usr", AppsSystem, root("usr"), DoNotTouch),
     rule!("simulator_runtimes", AppsSystem, root("Library/Developer/CoreSimulator/Volumes"), DoNotTouch),
+    // Global pnpm packages; their CLIs in `Library/pnpm` break without them.
+    rule!("pnpm_global", NodeJs, home("Library/pnpm/global"), DoNotTouch),
     // Xcode & iOS.
     rule!("derived_data", XcodeIos, home("Library/Developer/Xcode/DerivedData/*"), Safe),
     rule!("xcode_archives", XcodeIos, home("Library/Developer/Xcode/Archives/*"), Caution),
@@ -231,11 +233,20 @@ fn match_exact(path: &Path, roots: &Roots) -> Option<&'static Rule> {
     })
 }
 
+/// Shell semantics: `*` and `**` never match a dot-segment. Hidden dirs in home hold tools and
+/// their installs (`.nvm`, `.volta`, `.vscode`, ...), whose `node_modules` are not project deps.
 fn glob(pat: &[&str], segs: &[&OsStr]) -> bool {
+    let hidden = |s: &OsStr| s.as_encoded_bytes().starts_with(b".");
     match (pat.first(), segs.first()) {
         (None, None) => true,
-        (Some(&"**"), _) => glob(&pat[1..], segs) || (!segs.is_empty() && glob(pat, &segs[1..])),
-        (Some(&p), Some(&s)) => (p == "*" || s == p) && glob(&pat[1..], &segs[1..]),
+        (Some(&"**"), _) => {
+            glob(&pat[1..], segs)
+                || segs
+                    .first()
+                    .is_some_and(|&s| !hidden(s) && glob(pat, &segs[1..]))
+        }
+        (Some(&"*"), Some(&s)) => !hidden(s) && glob(&pat[1..], &segs[1..]),
+        (Some(&p), Some(&s)) => s == p && glob(&pat[1..], &segs[1..]),
         _ => false,
     }
 }

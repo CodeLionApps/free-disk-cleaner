@@ -378,6 +378,9 @@ msgstr "Zatrzymane kontenery; ich zapisane dane przepadną."
 msgid "rule.docker_volumes.why"
 msgstr "Wolumeny mogą przechowywać dane lokalnych baz."
 
+msgid "rule.pnpm_global.why"
+msgstr "Globalne pakiety pnpm; bez nich ich komendy przestają działać."
+
 msgid "rule.npm_cache.why"
 msgstr "Cache pobrań npm; uzupełni się przez npm install."
 

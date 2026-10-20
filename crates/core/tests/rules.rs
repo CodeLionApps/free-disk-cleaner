@@ -39,6 +39,7 @@ const EXPECTED: &[(&str, &str, Status)] = &[
     ("Users/tester/Library/Caches/Yarn", "yarn_cache", Status::Safe),
     ("Users/tester/.yarn/berry/cache", "yarn_berry_cache", Status::Safe),
     ("Users/tester/Library/pnpm/store", "pnpm_store", Status::Safe),
+    ("Users/tester/Library/pnpm/global", "pnpm_global", Status::DoNotTouch),
     ("Users/tester/Library/Caches/Homebrew", "homebrew_cache", Status::Safe),
     ("Users/tester/Library/Caches/CocoaPods", "cocoapods_cache", Status::Safe),
     ("Users/tester/.cocoapods/repos", "cocoapods_repos", Status::Safe),
@@ -142,6 +143,15 @@ fn every_rule_on_fixture_tree() {
     // node_modules inside a "Do not touch" area is covered by that area.
     touch(
         &root.join("Users/tester/Library/Mobile Documents/proj/node_modules/x.js"),
+        now,
+    );
+    // Global installs (nvm keeps npm, corepack and global CLIs here) are not project deps.
+    touch(
+        &root.join("Users/tester/.nvm/versions/node/v22.0.0/lib/node_modules/npm/x.js"),
+        now,
+    );
+    touch(
+        &root.join("Users/tester/Library/pnpm/global/5/node_modules/x.js"),
         now,
     );
     // Unknown paths get no status.

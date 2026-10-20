@@ -113,6 +113,15 @@ pub const FILES: &[(&str, u64)] = &[
         home!("Library/pnpm/store/v3/files/00/1a2b3c4d5e"),
         512 * KIB,
     ),
+    (
+        home!("Library/pnpm/global/5/node_modules/typescript/package.json"),
+        4 * KIB,
+    ),
+    // Global npm root of an nvm Node: must never be offered as a project node_modules.
+    (
+        home!(".nvm/versions/node/v22.0.0/lib/node_modules/corepack/dist/yarn.js"),
+        256 * KIB,
+    ),
     (home!(".npm/_cacache/content-v2/sha512/ab/cdef0123"), MIB),
     (
         home!(".gradle/caches/modules-2/files-2.1/com.google.guava/guava/33.0.0/guava-33.0.0.jar"),
