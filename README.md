@@ -43,3 +43,4 @@ FDC_TEST_ROOT=$PWD/fixtures-out cargo xtask dev-mcp   # + Slint MCP server on :8
 ## License
 
 MIT. UI built with [Slint](https://slint.dev) under the Slint Royalty-free license.
+Bundled font: [Inter](https://rsms.me/inter/), SIL Open Font License 1.1 (`crates/app/ui/fonts/Inter-LICENSE.txt`).

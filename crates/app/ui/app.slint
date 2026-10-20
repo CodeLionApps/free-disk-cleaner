@@ -1,6 +1,10 @@
-import { Button, CheckBox, ListView, ScrollView, LineEdit, ComboBox, AboutSlint, HorizontalBox, VerticalBox, Spinner, Palette } from "std-widgets.slint";
+import { Button, CheckBox, ListView, ScrollView, LineEdit, ComboBox, AboutSlint, HorizontalBox, VerticalBox, Spinner, ProgressIndicator, Palette } from "std-widgets.slint";
 import { Theme, Names, ItemRow, GroupRow, MapRect, PlanRow, ResultRow, StatusBadge, SortHeader, ItemRowView, Banner } from "widgets.slint";
 import { RuleTexts } from "rule_texts.slint";
+// Inter (SIL OFL 1.1, see fonts/Inter-LICENSE.txt): FemtoVG falls back to Helvetica on macOS.
+import "fonts/Inter-Regular.ttf";
+import "fonts/Inter-SemiBold.ttf";
+import "fonts/Inter-Bold.ttf";
 
 export { ItemRow, GroupRow, MapRect, PlanRow, ResultRow }
 
@@ -417,6 +421,7 @@ component AboutPage inherits VerticalBox {
 }
 
 export component AppWindow inherits Window {
+    default-font-family: "Inter";
     in property <bool> test-mode;
     in property <string> test-root;
     in-out property <Page> page: Page.home;
@@ -598,10 +603,24 @@ export component AppWindow inherits Window {
                 cancel => { root.page = Page.results; }
                 run => { root.run-clean(); }
             }
-            if root.page == Page.cleaning: VerticalBox {
+            if root.page == Page.cleaning: VerticalLayout {
                 alignment: center;
-                Spinner { indeterminate: true; width: 32px; height: 32px; }
-                Text { text: @tr("Cleaning {} of {}…", root.clean-done, root.clean-total); horizontal-alignment: center; }
+                HorizontalLayout {
+                    alignment: center;
+                    VerticalLayout {
+                        width: 360px;
+                        spacing: 12px;
+                        Text {
+                            text: @tr("Cleaning {} of {}…", root.clean-done, root.clean-total);
+                            font-size: 15px;
+                            font-weight: 600;
+                            horizontal-alignment: center;
+                        }
+                        ProgressIndicator {
+                            progress: root.clean-total > 0 ? root.clean-done / root.clean-total : 0;
+                        }
+                    }
+                }
             }
             if root.page == Page.done: DonePage {
                 reclaimed: root.reclaimed;
