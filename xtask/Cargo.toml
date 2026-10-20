@@ -1,0 +1,11 @@
+[package]
+name = "xtask"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+anyhow = "1"
+fdc-core.workspace = true
+fdc-fixtures.workspace = true
