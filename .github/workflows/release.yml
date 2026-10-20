@@ -1,0 +1,108 @@
+name: Release
+
+# Tags only (incl. pre-releases like v0.0.1-rc1). Never on pull_request: signing secrets stay out of fork code.
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: macos-15
+    env:
+      KEYCHAIN: ${{ runner.temp }}/fdc-signing.keychain-db
+      API_KEY_FILE: ${{ runner.temp }}/fdc-AuthKey.p8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest,cargo-deny
+
+      # Done gate (same as CI).
+      - name: Format
+        run: cargo fmt --all --check
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Test
+        run: cargo nextest run --workspace
+      - name: Deny
+        run: cargo deny check
+
+      - name: Import Developer ID certificate into a temporary keychain
+        env:
+          MACOS_CERT_P12_BASE64: ${{ secrets.MACOS_CERT_P12_BASE64 }}
+          MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+        run: |
+          set -euo pipefail
+          KEYCHAIN_PASSWORD="$(openssl rand -base64 32)"
+          echo "::add-mask::$KEYCHAIN_PASSWORD"
+          CERT="$RUNNER_TEMP/fdc-cert.p12"
+          umask 077
+          printf '%s' "$MACOS_CERT_P12_BASE64" | base64 --decode > "$CERT"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$CERT" -k "$KEYCHAIN" -P "$MACOS_CERT_PASSWORD" -T /usr/bin/codesign > /dev/null
+          rm -f "$CERT"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" > /dev/null
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+
+      - name: Package, sign, notarize, staple
+        env:
+          MACOS_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
+          APPLE_API_KEY_P8_BASE64: ${{ secrets.APPLE_API_KEY_P8_BASE64 }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+        run: |
+          set -euo pipefail
+          umask 077
+          trap 'rm -f "$API_KEY_FILE"' EXIT
+          printf '%s' "$APPLE_API_KEY_P8_BASE64" | base64 --decode > "$API_KEY_FILE"
+          APPLE_API_KEY_PATH="$API_KEY_FILE" cargo xtask package --sign "$MACOS_SIGN_IDENTITY" --notarize
+
+      - name: Verify signature, Gatekeeper, staple
+        run: |
+          set -euo pipefail
+          DMG="$(ls target/package/FreeDiskCleaner-*.dmg)"
+          codesign --verify --deep --strict --verbose=2 target/package/FreeDiskCleaner.app
+          spctl -a -vv -t install "$DMG"
+          xcrun stapler validate "$DMG"
+          echo "DMG=$DMG" >> "$GITHUB_ENV"
+          VERSION="$(basename "$DMG" .dmg)"; VERSION="${VERSION#FreeDiskCleaner-}"
+          if [ "v$VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "::warning::tag $GITHUB_REF_NAME does not match workspace version $VERSION"
+          fi
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          PRERELEASE=""
+          if [[ "$GITHUB_REF_NAME" == *-* ]]; then PRERELEASE="--prerelease"; fi
+          cat > "$RUNNER_TEMP/notes.md" <<'EOF'
+          [![Made with Slint](https://raw.githubusercontent.com/slint-ui/slint/master/logo/MadeWithSlint-logo-whitebg.png)](https://slint.dev)
+
+          Signed and notarized for macOS 13+ on Apple Silicon. Open the `.dmg` and drag FreeDiskCleaner to Applications.
+          EOF
+          gh release create "$GITHUB_REF_NAME" "$DMG" \
+            --verify-tag \
+            --title "FreeDiskCleaner $GITHUB_REF_NAME" \
+            --notes-file "$RUNNER_TEMP/notes.md" \
+            --generate-notes \
+            $PRERELEASE
+
+      - name: Clean up signing material
+        if: always()
+        run: |
+          rm -f "$API_KEY_FILE" "$RUNNER_TEMP/fdc-cert.p12"
+          security delete-keychain "$KEYCHAIN" 2>/dev/null || true
