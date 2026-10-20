@@ -426,6 +426,9 @@ msgstr "App cache; usually regenerated, some apps may lose offline data."
 msgid "rule.node_modules.why"
 msgstr "Project dependencies; restored by yarn/npm install."
 
+msgid "rule.node_modules_recent.why"
+msgstr "Used recently; deleting forces a fresh yarn/npm install."
+
 msgid "hint.tm_keep_newest"
 msgstr "Keep the newest snapshot, remove older ones."
 

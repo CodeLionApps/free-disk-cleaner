@@ -92,6 +92,8 @@ const PROJECT_FILES: [&str; 4] = [
     "package-lock.json",
     "pnpm-lock.yaml",
 ];
+/// Rationale for a `node_modules` used within the stale threshold (Caution instead of Safe).
+const RECENT_NODE_MODULES_WHY: &str = "rule.node_modules_recent.why";
 
 macro_rules! rule {
     ($id:literal, $group:ident, $matcher:expr, $status:ident) => {
@@ -188,6 +190,7 @@ pub fn all_translation_keys() -> Vec<&'static str> {
     for k in RULES
         .iter()
         .flat_map(|r| std::iter::once(r.rationale_key).chain(r.hint_key))
+        .chain([RECENT_NODE_MODULES_WHY])
     {
         if !keys.contains(&k) {
             keys.push(k);
@@ -302,8 +305,8 @@ fn item(
     )
 }
 
-/// Stale when every project file next to `node_modules` (package.json + lockfiles that exist, or
-/// `node_modules` itself if none do) is older than `now - stale_node_modules_after`.
+/// Stale when `node_modules` itself and every project file next to it (package.json + lockfiles
+/// that exist) are older than `now - stale_node_modules_after`.
 fn is_stale(tree: &ScanTree, nm: NodeId, params: &ClassifyParams) -> bool {
     let Some(cutoff) = params.now.checked_sub(params.stale_node_modules_after) else {
         return false;
@@ -318,9 +321,7 @@ fn is_stale(tree: &ScanTree, nm: NodeId, params: &ClassifyParams) -> bool {
         .filter(|n| PROJECT_FILES.iter().any(|f| n.name == *f))
         .filter_map(|n| n.mtime)
         .collect();
-    if mtimes.is_empty() {
-        mtimes.extend(tree.node(nm).newest_mtime);
-    }
+    mtimes.extend(tree.node(nm).newest_mtime);
     !mtimes.is_empty() && mtimes.iter().all(|&t| t < cutoff)
 }
 
@@ -342,17 +343,23 @@ fn build(
     last_used: Option<SystemTime>,
     stale: bool,
 ) -> Classified {
+    // Recently used node_modules: reinstalling costs time, so Caution (not preselected), not Safe.
+    let (status, rationale_key) = if rule.id == NODE_MODULES && !stale {
+        (Status::Caution, RECENT_NODE_MODULES_WHY)
+    } else {
+        (rule.status, rule.rationale_key)
+    };
     let info = ItemInfo {
         target,
         rule_id: rule.id,
         group: rule.group,
-        rationale_key: rule.rationale_key,
+        rationale_key,
         hint_key: rule.hint_key,
         size,
         last_used,
         stale,
     };
-    match rule.status {
+    match status {
         Status::DoNotTouch => Classified::Protected(Protected::new(info)),
         Status::Safe => Classified::Deletable(Deletable::new(info, DeletableStatus::Safe)),
         Status::Caution => Classified::Deletable(Deletable::new(info, DeletableStatus::Caution)),

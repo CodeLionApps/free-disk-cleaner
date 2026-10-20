@@ -426,6 +426,9 @@ msgstr "Cache aplikacji; zwykle się odtwarza, niektóre aplikacje mogą straci�
 msgid "rule.node_modules.why"
 msgstr "Zależności projektu; odtworzą się przez yarn/npm install."
 
+msgid "rule.node_modules_recent.why"
+msgstr "Używane niedawno; usunięcie wymusi ponowny yarn/npm install."
+
 msgid "hint.tm_keep_newest"
 msgstr "Zostaw najnowszy snapshot, usuń starsze."
 

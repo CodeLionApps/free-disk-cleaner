@@ -222,7 +222,7 @@ fn matched_dirs_are_not_descended() {
         vec![(
             Path::new("/r/Users/tester/code/app/node_modules"),
             "node_modules",
-            Status::Safe
+            Status::Caution
         )]
     );
 }
@@ -474,9 +474,11 @@ proptest! {
         let items = classify_tree(&t, &roots(), &params(at(now), Duration::from_secs(after)));
         prop_assert_eq!(items.len(), 1);
         let cutoff = now as i128 - after as i128;
-        let files: Vec<u64> = pkg.into_iter().chain(lock).collect();
-        let known = if files.is_empty() { nm.into_iter().collect() } else { files };
+        let known: Vec<u64> = pkg.into_iter().chain(lock).chain(nm).collect();
         let expected = !known.is_empty() && known.iter().all(|&s| (s as i128) < cutoff);
         prop_assert_eq!(items[0].info().stale, expected);
+        let status = items[0].as_deletable().map(|d| d.status());
+        let want = if expected { DeletableStatus::Safe } else { DeletableStatus::Caution };
+        prop_assert_eq!(status, Some(want));
     }
 }

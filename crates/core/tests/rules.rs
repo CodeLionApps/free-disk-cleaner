@@ -47,7 +47,7 @@ const EXPECTED: &[(&str, &str, Status)] = &[
     ("Library/Logs/DiagnosticReports", "diagnostic_reports", Status::Caution),
     ("Library/Caches/com.example.daemon", "system_caches", Status::Caution),
     ("Users/tester/Library/Caches/com.example.app", "user_caches", Status::Caution),
-    ("Users/tester/code/fresh/node_modules", "node_modules", Status::Safe),
+    ("Users/tester/code/fresh/node_modules", "node_modules", Status::Caution),
     ("Users/tester/code/old/node_modules", "node_modules", Status::Safe),
 ];
 
@@ -140,6 +140,12 @@ fn every_rule_on_fixture_tree() {
         &root.join("Users/tester/code/old/yarn.lock"),
         now - 90 * day,
     );
+    let old_nm = root.join("Users/tester/code/old/node_modules");
+    touch(&old_nm.join("payload"), now - 80 * day);
+    fs::File::open(&old_nm)
+        .unwrap()
+        .set_modified(now - 80 * day)
+        .unwrap();
     // node_modules inside a "Do not touch" area is covered by that area.
     touch(
         &root.join("Users/tester/Library/Mobile Documents/proj/node_modules/x.js"),
