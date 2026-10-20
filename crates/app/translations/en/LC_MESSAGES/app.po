@@ -1,0 +1,430 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: en\n"
+
+msgid "Full Disk Access needed"
+msgstr "Full Disk Access needed"
+
+msgid "FreeDiskCleaner needs Full Disk Access to measure folders macOS protects (Time Machine data, Mail, other apps' containers). Nothing leaves your Mac: no network, no telemetry."
+msgstr "FreeDiskCleaner needs Full Disk Access to measure folders macOS protects (Time Machine data, Mail, other apps' containers). Nothing leaves your Mac: no network, no telemetry."
+
+msgid "Open System Settings → Privacy & Security → Full Disk Access, enable FreeDiskCleaner, then come back and press \"Check again\"."
+msgstr "Open System Settings → Privacy & Security → Full Disk Access, enable FreeDiskCleaner, then come back and press \"Check again\"."
+
+msgid "Open System Settings"
+msgstr "Open System Settings"
+
+msgid "Check again"
+msgstr "Check again"
+
+msgid "Skip (limited scan)"
+msgstr "Skip (limited scan)"
+
+msgid "See what fills your disk"
+msgstr "See what fills your disk"
+
+msgid "Scans {}, recognizes developer junk and rates every item: Safe, Caution or Do not touch."
+msgstr "Scans {}, recognizes developer junk and rates every item: Safe, Caution or Do not touch."
+
+msgid "Limited scan: without Full Disk Access some folders can't be measured."
+msgstr "Limited scan: without Full Disk Access some folders can't be measured."
+
+msgid "Scan"
+msgstr "Scan"
+
+msgid "Cancel"
+msgstr "Cancel"
+
+msgid "Scanned {} files, {}"
+msgstr "Scanned {} files, {}"
+
+msgid "Scan cancelled."
+msgstr "Scan cancelled."
+
+msgid "Scan failed: {}"
+msgstr "Scan failed: {}"
+
+msgid "‹ Back"
+msgstr "‹ Back"
+
+msgid "Select all stale"
+msgstr "Select all stale"
+
+msgid "Table"
+msgstr "Table"
+
+msgid "Map"
+msgstr "Map"
+
+msgid "Docker is not running. Start Docker Desktop and scan again to see images, containers, volumes and build cache."
+msgstr "Docker is not running. Start Docker Desktop and scan again to see images, containers, volumes and build cache."
+
+msgid "Critical system data. Shown for information only; it can't be deleted from this app."
+msgstr "Critical system data. Shown for information only; it can't be deleted from this app."
+
+msgid "Data created by macOS that can be reduced. Nothing here is selected by default; read the hint on each item."
+msgstr "Data created by macOS that can be reduced. Nothing here is selected by default; read the hint on each item."
+
+msgid "Projects untouched for a long time. node_modules is restored by yarn/npm install."
+msgstr "Projects untouched for a long time. node_modules is restored by yarn/npm install."
+
+msgid "Name"
+msgstr "Name"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Last used"
+msgstr "Last used"
+
+msgid "Size"
+msgstr "Size"
+
+msgid "Nothing found here."
+msgstr "Nothing found here."
+
+msgid "Selected: {} items, {}"
+msgstr "Selected: {} items, {}"
+
+msgid "Delete immediately, skip Trash (Safe items only)"
+msgstr "Delete immediately, skip Trash (Safe items only)"
+
+msgid "Clean…"
+msgstr "Clean…"
+
+msgid "Large cleanup: please review"
+msgstr "Large cleanup: please review"
+
+msgid "Review cleanup"
+msgstr "Review cleanup"
+
+msgid "{} will be removed:"
+msgstr "{} will be removed:"
+
+msgid "This cleanup removes more than {} at once. Check the list carefully."
+msgstr "This cleanup removes more than {} at once. Check the list carefully."
+
+msgid "Some operations cannot be undone (immediate deletion or Docker commands). They will not go to the Trash."
+msgstr "Some operations cannot be undone (immediate deletion or Docker commands). They will not go to the Trash."
+
+msgid "Docker's virtual disk file may not shrink right away after pruning; free space can appear later."
+msgstr "Docker's virtual disk file may not shrink right away after pruning; free space can appear later."
+
+msgid "Move to Trash"
+msgstr "Move to Trash"
+
+msgid "Delete permanently"
+msgstr "Delete permanently"
+
+msgid "Confirm: this item is larger than {}"
+msgstr "Confirm: this item is larger than {}"
+
+msgid "Clean now"
+msgstr "Clean now"
+
+msgid "Cleanup finished"
+msgstr "Cleanup finished"
+
+msgid "Space reclaimed now: {} (estimated {})"
+msgstr "Space reclaimed now: {} (estimated {})"
+
+msgid "{} moved to the Trash. That space is freed only after you empty the Trash."
+msgstr "{} moved to the Trash. That space is freed only after you empty the Trash."
+
+msgid "Back to results"
+msgstr "Back to results"
+
+msgid "Scan again"
+msgstr "Scan again"
+
+msgid "Settings"
+msgstr "Settings"
+
+msgid "Large item threshold (GB)"
+msgstr "Large item threshold (GB)"
+
+msgid "Bulk cleanup warning above (GB)"
+msgstr "Bulk cleanup warning above (GB)"
+
+msgid "node_modules stale after (days)"
+msgstr "node_modules stale after (days)"
+
+msgid "Language"
+msgstr "Language"
+
+msgid "System default"
+msgstr "System default"
+
+msgid "Enter positive numbers for all thresholds."
+msgstr "Enter positive numbers for all thresholds."
+
+msgid "Close"
+msgstr "Close"
+
+msgid "Save"
+msgstr "Save"
+
+msgid "Free, open-source (MIT) disk cleaner for developers. No accounts, no network, no telemetry."
+msgstr "Free, open-source (MIT) disk cleaner for developers. No accounts, no network, no telemetry."
+
+msgid "FreeDiskCleaner"
+msgstr "FreeDiskCleaner"
+
+msgid "About FreeDiskCleaner"
+msgstr "About FreeDiskCleaner"
+
+msgid "Settings…"
+msgstr "Settings…"
+
+msgid "TEST MODE"
+msgstr "TEST MODE"
+
+msgid "About"
+msgstr "About"
+
+msgid "Cleaning {} of {}…"
+msgstr "Cleaning {} of {}…"
+
+msgid "Xcode & iOS"
+msgstr "Xcode & iOS"
+
+msgid "Android"
+msgstr "Android"
+
+msgid "Docker"
+msgstr "Docker"
+
+msgid "Node / JS"
+msgstr "Node / JS"
+
+msgid "Homebrew & other"
+msgstr "Homebrew & other"
+
+msgid "System data: removable"
+msgstr "System data: removable"
+
+msgid "System data: critical"
+msgstr "System data: critical"
+
+msgid "Stale node_modules"
+msgstr "Stale node_modules"
+
+msgid "All files"
+msgstr "All files"
+
+msgid "Docker build cache"
+msgstr "Docker build cache"
+
+msgid "Dangling Docker images"
+msgstr "Dangling Docker images"
+
+msgid "Unused Docker images"
+msgstr "Unused Docker images"
+
+msgid "Stopped Docker containers"
+msgstr "Stopped Docker containers"
+
+msgid "Unused Docker volumes"
+msgstr "Unused Docker volumes"
+
+msgid "Time Machine local snapshot"
+msgstr "Time Machine local snapshot"
+
+msgid "Unavailable simulators"
+msgstr "Unavailable simulators"
+
+msgid "Simulator runtime"
+msgstr "Simulator runtime"
+
+msgid "No longer exists"
+msgstr "No longer exists"
+
+msgid "Rejected: became a symlink"
+msgstr "Rejected: became a symlink"
+
+msgid "Rejected: no longer matches its rule"
+msgstr "Rejected: no longer matches its rule"
+
+msgid "Rejected: inside a protected location"
+msgstr "Rejected: inside a protected location"
+
+msgid "Rejected: resolves outside the allowed area"
+msgstr "Rejected: resolves outside the allowed area"
+
+msgid "Docker is not running"
+msgstr "Docker is not running"
+
+msgid "Command failed"
+msgstr "Command failed"
+
+msgid "Moved to Trash"
+msgstr "Moved to Trash"
+
+msgid "Deleted"
+msgstr "Deleted"
+
+msgid "Command finished"
+msgstr "Command finished"
+
+msgid "Failed"
+msgstr "Failed"
+
+msgid "Safe"
+msgstr "Safe"
+
+msgid "Caution"
+msgstr "Caution"
+
+msgid "Do not touch"
+msgstr "Do not touch"
+
+msgid "No recommendation"
+msgstr "No recommendation"
+
+msgid "Select {}"
+msgstr "Select {}"
+
+msgid "LARGE"
+msgstr "LARGE"
+
+msgid "STALE"
+msgstr "STALE"
+
+msgid "Open {}"
+msgstr "Open {}"
+
+msgid "rule.docker_vm.why"
+msgstr "Docker Desktop's virtual disk. Clean it only through Docker commands, never by deleting files."
+
+msgid "rule.icloud_drive.why"
+msgstr "iCloud Drive: your synced documents."
+
+msgid "rule.keychains.why"
+msgstr "Keychains with your passwords and certificates."
+
+msgid "rule.mail.why"
+msgstr "Mail data: your messages and attachments."
+
+msgid "rule.messages.why"
+msgstr "Messages history and attachments."
+
+msgid "rule.system.why"
+msgstr "macOS system files. Deleting them can break the system."
+
+msgid "rule.vm_swap.why"
+msgstr "Swap and sleep image, managed by macOS."
+
+msgid "rule.var_db.why"
+msgstr "System databases (permissions, configuration)."
+
+msgid "rule.var_folders.why"
+msgstr "Per-user temporary data managed by macOS."
+
+msgid "rule.usr.why"
+msgstr "Core Unix system files."
+
+msgid "rule.simulator_runtimes.why"
+msgstr "Simulator runtimes. Removed only via the simctl command item."
+
+msgid "rule.derived_data.why"
+msgstr "Xcode build products; rebuilt on the next build."
+
+msgid "rule.xcode_archives.why"
+msgstr "App archives; needed to symbolicate crashes or resubmit a build."
+
+msgid "rule.ios_device_support.why"
+msgstr "Debug symbols for a connected iOS version; re-downloaded when a device connects."
+
+msgid "rule.watchos_device_support.why"
+msgstr "Debug symbols for watchOS; re-downloaded when a watch connects."
+
+msgid "rule.simulator_caches.why"
+msgstr "Simulator caches; regenerated automatically."
+
+msgid "rule.simulator_devices.why"
+msgstr "A simulator device with its installed apps and their data."
+
+msgid "rule.xcode_cache.why"
+msgstr "Xcode cache; regenerated automatically."
+
+msgid "rule.xcode_previews.why"
+msgstr "SwiftUI preview builds; rebuilt when needed."
+
+msgid "rule.gradle_caches.why"
+msgstr "Gradle dependency cache; downloaded again on the next build."
+
+msgid "rule.gradle_wrapper.why"
+msgstr "Downloaded Gradle distributions; re-downloaded when needed."
+
+msgid "rule.android_avd.why"
+msgstr "Android emulator with its data and installed apps."
+
+msgid "rule.android_system_images.why"
+msgstr "Android system image; large download to get it back."
+
+msgid "rule.docker_build_cache.why"
+msgstr "Docker build cache; rebuilt on the next build."
+
+msgid "rule.docker_dangling_images.why"
+msgstr "Untagged leftover image layers."
+
+msgid "rule.docker_unused_images.why"
+msgstr "Images no container uses; you'll need to pull them again."
+
+msgid "rule.docker_stopped_containers.why"
+msgstr "Stopped containers; their writable data is lost."
+
+msgid "rule.docker_volumes.why"
+msgstr "Volumes may hold local database data."
+
+msgid "rule.npm_cache.why"
+msgstr "npm download cache; refilled by npm install."
+
+msgid "rule.yarn_cache.why"
+msgstr "Yarn download cache; refilled by yarn install."
+
+msgid "rule.yarn_berry_cache.why"
+msgstr "Yarn Berry global cache; refilled by yarn install."
+
+msgid "rule.pnpm_store.why"
+msgstr "pnpm package store; refilled by pnpm install."
+
+msgid "rule.homebrew_cache.why"
+msgstr "Homebrew downloads; not needed after install."
+
+msgid "rule.cocoapods_cache.why"
+msgstr "CocoaPods download cache; refilled by pod install."
+
+msgid "rule.cocoapods_repos.why"
+msgstr "CocoaPods spec repos; cloned again when needed."
+
+msgid "rule.user_logs.why"
+msgstr "Application logs; recreated as apps run."
+
+msgid "rule.diagnostic_reports.why"
+msgstr "System crash and diagnostic reports."
+
+msgid "rule.tm_snapshots.why"
+msgstr "Local Time Machine snapshot kept on this disk."
+
+msgid "rule.simctl_runtimes.why"
+msgstr "Simulator runtime; you can't run simulators of this OS version after removal."
+
+msgid "rule.simctl_unavailable_devices.why"
+msgstr "Simulators whose runtime is gone; they can't run anymore."
+
+msgid "rule.system_caches.why"
+msgstr "System-wide app cache; usually regenerated, some apps may lose offline data."
+
+msgid "rule.user_caches.why"
+msgstr "App cache; usually regenerated, some apps may lose offline data."
+
+msgid "rule.node_modules.why"
+msgstr "Project dependencies; restored by yarn/npm install."
+
+msgid "hint.tm_keep_newest"
+msgstr "Keep the newest snapshot, remove older ones."
+
+msgid "hint.runtime_keep_current"
+msgstr "Keep the runtime your Xcode uses, remove older ones."

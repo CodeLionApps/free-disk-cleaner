@@ -1,0 +1,630 @@
+import { Button, CheckBox, ListView, ScrollView, LineEdit, ComboBox, AboutSlint, HorizontalBox, VerticalBox, Spinner, Palette } from "std-widgets.slint";
+import { Theme, Names, ItemRow, GroupRow, MapRect, PlanRow, ResultRow, StatusBadge, SortHeader, ItemRowView, Banner } from "widgets.slint";
+import { RuleTexts } from "rule_texts.slint";
+
+export { ItemRow, GroupRow, MapRect, PlanRow, ResultRow }
+
+export enum Page { onboarding, home, results, confirm, cleaning, done, settings, about }
+
+component Title inherits Text {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+component OnboardingPage inherits VerticalBox {
+    callback open-settings();
+    callback recheck();
+    callback skip();
+    alignment: center;
+    spacing: 14px;
+    Title { text: @tr("Full Disk Access needed"); horizontal-alignment: center; }
+    Text {
+        text: @tr("FreeDiskCleaner needs Full Disk Access to measure folders macOS protects (Time Machine data, Mail, other apps' containers). Nothing leaves your Mac: no network, no telemetry.");
+        wrap: word-wrap;
+        horizontal-alignment: center;
+    }
+    Text {
+        text: @tr("Open System Settings → Privacy & Security → Full Disk Access, enable FreeDiskCleaner, then come back and press \"Check again\".");
+        wrap: word-wrap;
+        horizontal-alignment: center;
+        color: Theme.muted;
+    }
+    HorizontalLayout {
+        alignment: center;
+        spacing: 10px;
+        Button { text: @tr("Open System Settings"); primary: true; clicked => { root.open-settings(); } }
+        Button { text: @tr("Check again"); clicked => { root.recheck(); } }
+        Button { text: @tr("Skip (limited scan)"); clicked => { root.skip(); } }
+    }
+}
+
+component HomePage inherits VerticalBox {
+    in property <bool> scanning;
+    in property <int> files;
+    in property <string> bytes;
+    in property <string> current;
+    in property <string> scan-root;
+    in property <bool> limited;
+    in property <string> error;
+    callback scan();
+    callback cancel();
+    alignment: center;
+    spacing: 16px;
+    Title { text: @tr("See what fills your disk"); horizontal-alignment: center; }
+    Text {
+        text: @tr("Scans {}, recognizes developer junk and rates every item: Safe, Caution or Do not touch.", root.scan-root);
+        horizontal-alignment: center;
+        wrap: word-wrap;
+        color: Theme.muted;
+    }
+    if root.limited: Banner {
+        text: @tr("Limited scan: without Full Disk Access some folders can't be measured.");
+        tint: Theme.caution;
+    }
+    HorizontalLayout {
+        alignment: center;
+        spacing: 10px;
+        if !root.scanning: Button { text: @tr("Scan"); primary: true; clicked => { root.scan(); } }
+        if root.scanning: Spinner { indeterminate: true; width: 24px; height: 24px; }
+        if root.scanning: Button { text: @tr("Cancel"); clicked => { root.cancel(); } }
+    }
+    if root.scanning: Text {
+        text: @tr("Scanned {} files, {}", root.files, root.bytes);
+        horizontal-alignment: center;
+    }
+    if root.scanning: Text {
+        text: root.current;
+        horizontal-alignment: center;
+        overflow: elide;
+        color: Theme.muted;
+    }
+    if root.error != "": Text {
+        text: root.error == "cancelled" ? @tr("Scan cancelled.") : @tr("Scan failed: {}", root.error);
+        horizontal-alignment: center;
+        color: Theme.danger;
+    }
+}
+
+component MapView inherits Rectangle {
+    in property <[MapRect]> rects;
+    callback open(int);
+    clip: true;
+    for r in root.rects: Rectangle {
+        x: r.x * 1px;
+        y: r.y * 1px;
+        width: r.w * 1px;
+        height: r.h * 1px;
+        Rectangle {
+            x: 1px;
+            y: 1px;
+            width: parent.width - 2px;
+            height: parent.height - 2px;
+            border-radius: 3px;
+            background: ta.has-hover ? Theme.status-color(r.status).with-alpha(0.55) : Theme.status-color(r.status).with-alpha(0.35);
+            border-color: Theme.status-color(r.status);
+            border-width: 1px;
+            accessible-role: button;
+            accessible-label: r.name;
+            accessible-action-default => { if r.can-open { root.open(r.id); } }
+            ta := TouchArea { clicked => { if r.can-open { root.open(r.id); } } }
+            if parent.width > 60px && parent.height > 30px: VerticalLayout {
+                padding: 4px;
+                alignment: start;
+                Text { text: r.name; font-size: 11px; font-weight: 600; overflow: elide; }
+                Text { text: r.size; font-size: 10px; overflow: elide; }
+            }
+        }
+    }
+}
+
+component ResultsPage inherits HorizontalLayout {
+    in property <[GroupRow]> groups;
+    in property <string> current-group;
+    in property <[ItemRow]> rows;
+    in property <[MapRect]> map-rects;
+    in property <[string]> breadcrumb;
+    in property <string> group-note;
+    in property <int> sort-column;
+    in property <bool> sort-ascending;
+    in property <int> selected-count;
+    in property <string> selected-size;
+    in property <bool> can-clean;
+    in property <bool> show-stale-actions;
+    in-out property <bool> map-mode;
+    in-out property <bool> skip-trash;
+    out property <length> map-width: content.width;
+    out property <length> map-height: content.height;
+    callback select-group(string);
+    callback toggle(int);
+    callback open(int);
+    callback up();
+    callback sort(int);
+    callback clean();
+    callback select-stale();
+    callback map-resized();
+
+    spacing: 0px;
+    Rectangle {
+        width: 240px;
+        background: Theme.surface;
+        VerticalLayout {
+            padding: 8px;
+            spacing: 2px;
+            alignment: start;
+            for g in root.groups: Rectangle {
+                height: 40px;
+                border-radius: 6px;
+                background: g.key == root.current-group ? Palette.selection-background.with-alpha(0.25) : gta.has-hover ? Palette.border.with-alpha(0.2) : transparent;
+                accessible-role: button;
+                accessible-label: Names.group(g.key);
+                accessible-action-default => { root.select-group(g.key); }
+                gta := TouchArea { clicked => { root.select-group(g.key); } }
+                HorizontalLayout {
+                    padding-left: 8px;
+                    padding-right: 8px;
+                    spacing: 6px;
+                    Text {
+                        text: Names.group(g.key);
+                        vertical-alignment: center;
+                        overflow: elide;
+                        horizontal-stretch: 1;
+                        color: g.critical ? Theme.danger : Palette.foreground;
+                    }
+                    Text { text: g.size; vertical-alignment: center; color: Theme.muted; font-size: 12px; }
+                }
+            }
+        }
+    }
+    VerticalLayout {
+        padding: 10px;
+        spacing: 8px;
+        horizontal-stretch: 1;
+        HorizontalLayout {
+            spacing: 8px;
+            if root.breadcrumb.length > 0: Button {
+                text: @tr("‹ Back");
+                clicked => { root.up(); }
+            }
+            Text {
+                text: root.breadcrumb.length > 0 ? root.breadcrumb[root.breadcrumb.length - 1] : "";
+                vertical-alignment: center;
+                overflow: elide;
+                horizontal-stretch: 1;
+                color: Theme.muted;
+            }
+            if root.show-stale-actions: Button {
+                text: @tr("Select all stale");
+                clicked => { root.select-stale(); }
+            }
+            Button {
+                text: root.map-mode ? @tr("Table") : @tr("Map");
+                clicked => { root.map-mode = !root.map-mode; root.map-resized(); }
+            }
+        }
+        if root.group-note == "docker-not-running": Banner { text: @tr("Docker is not running. Start Docker Desktop and scan again to see images, containers, volumes and build cache."); tint: Theme.caution; }
+        if root.group-note == "sys-critical": Banner { text: @tr("Critical system data. Shown for information only; it can't be deleted from this app."); tint: Theme.danger; }
+        if root.group-note == "sys-removable": Banner { text: @tr("Data created by macOS that can be reduced. Nothing here is selected by default; read the hint on each item."); tint: Theme.caution; }
+        if root.group-note == "stale": Banner { text: @tr("Projects untouched for a long time. node_modules is restored by yarn/npm install."); tint: Theme.safe; }
+        if !root.map-mode: HorizontalLayout {
+            padding-left: 42px;
+            padding-right: 50px;
+            spacing: 10px;
+            height: 24px;
+            SortHeader { text: @tr("Name"); horizontal-stretch: 1; active: root.sort-column == 0; ascending: root.sort-ascending; clicked => { root.sort(0); } }
+            SortHeader { text: @tr("Status"); width: 130px; active: root.sort-column == 3; ascending: root.sort-ascending; clicked => { root.sort(3); } }
+            SortHeader { text: @tr("Last used"); width: 90px; active: root.sort-column == 2; ascending: root.sort-ascending; clicked => { root.sort(2); } }
+            SortHeader { text: @tr("Size"); width: 80px; active: root.sort-column == 1; ascending: root.sort-ascending; clicked => { root.sort(1); } }
+        }
+        content := Rectangle {
+            vertical-stretch: 1;
+            changed width => { root.map-resized(); }
+            changed height => { root.map-resized(); }
+            if !root.map-mode: ListView {
+                width: parent.width;
+                height: parent.height;
+                for r in root.rows: ItemRowView {
+                    item: r;
+                    toggled(id) => { root.toggle(id); }
+                    open(id) => { root.open(id); }
+                }
+            }
+            if root.map-mode: MapView {
+                width: parent.width;
+                height: parent.height;
+                rects: root.map-rects;
+                open(id) => { root.open(id); }
+            }
+            if root.rows.length == 0: Text {
+                text: @tr("Nothing found here.");
+                color: Theme.muted;
+            }
+        }
+        HorizontalLayout {
+            spacing: 12px;
+            Text { text: @tr("Selected: {} items, {}", root.selected-count, root.selected-size); vertical-alignment: center; horizontal-stretch: 1; }
+            CheckBox {
+                text: @tr("Delete immediately, skip Trash (Safe items only)");
+                checked <=> root.skip-trash;
+            }
+            Button {
+                text: @tr("Clean…");
+                primary: true;
+                enabled: root.can-clean;
+                clicked => { root.clean(); }
+            }
+        }
+    }
+}
+
+component ConfirmPage inherits VerticalBox {
+    in property <[PlanRow]> plan;
+    in property <string> total;
+    in property <bool> bulk;
+    in property <bool> irreversible;
+    in property <bool> has-docker;
+    in property <string> bulk-limit;
+    in property <string> large-limit;
+    in property <bool> all-confirmed;
+    callback confirm-large(int);
+    callback cancel();
+    callback run();
+    Title { text: root.bulk ? @tr("Large cleanup: please review") : @tr("Review cleanup"); }
+    Text { text: @tr("{} will be removed:", root.total); }
+    if root.bulk: Banner {
+        text: @tr("This cleanup removes more than {} at once. Check the list carefully.", root.bulk-limit);
+        tint: Theme.danger;
+    }
+    if root.irreversible: Banner {
+        text: @tr("Some operations cannot be undone (immediate deletion or Docker commands). They will not go to the Trash.");
+        tint: Theme.danger;
+    }
+    if root.has-docker: Banner {
+        text: @tr("Docker's virtual disk file may not shrink right away after pruning; free space can appear later.");
+        tint: Theme.caution;
+    }
+    ListView {
+        vertical-stretch: 1;
+        for p in root.plan: Rectangle {
+            height: p.large ? 64px : 40px;
+            VerticalLayout {
+                padding-left: 6px;
+                padding-right: 18px;
+                alignment: center;
+                HorizontalLayout {
+                    spacing: 10px;
+                    Text { text: p.kind != "" ? Names.command(p.kind) + (p.name != "" ? " " + p.name : "") : p.name; font-weight: 600; overflow: elide; horizontal-stretch: 1; }
+                    Text {
+                        text: p.method == "trash" ? @tr("Move to Trash") : p.method == "direct" ? @tr("Delete permanently") : "$ " + p.command;
+                        color: p.method == "trash" ? Theme.muted : Theme.danger;
+                        font-size: 12px;
+                        overflow: elide;
+                        max-width: 380px;
+                    }
+                    Text { text: p.size; width: 80px; horizontal-alignment: right; font-weight: 600; }
+                }
+                if p.large: CheckBox {
+                    text: @tr("Confirm: this item is larger than {}", root.large-limit);
+                    checked: p.confirmed;
+                    toggled => { root.confirm-large(p.id); }
+                }
+            }
+        }
+    }
+    HorizontalLayout {
+        alignment: end;
+        spacing: 10px;
+        Button { text: @tr("Cancel"); clicked => { root.cancel(); } }
+        Button {
+            text: @tr("Clean now");
+            primary: true;
+            enabled: root.all-confirmed;
+            clicked => { root.run(); }
+        }
+    }
+}
+
+component DonePage inherits VerticalBox {
+    in property <string> reclaimed;
+    in property <string> estimated;
+    in property <string> trashed;
+    in property <[ResultRow]> results;
+    in property <bool> has-docker;
+    callback back();
+    callback rescan();
+    Title { text: @tr("Cleanup finished"); }
+    Text { text: @tr("Space reclaimed now: {} (estimated {})", root.reclaimed, root.estimated); font-size: 16px; }
+    if root.trashed != "": Text { text: @tr("{} moved to the Trash. That space is freed only after you empty the Trash.", root.trashed); color: Theme.muted; wrap: word-wrap; }
+    if root.has-docker: Banner {
+        text: @tr("Docker's virtual disk file may not shrink right away after pruning; free space can appear later.");
+        tint: Theme.caution;
+    }
+    ListView {
+        vertical-stretch: 1;
+        for r in root.results: HorizontalLayout {
+            height: 32px;
+            spacing: 10px;
+            Text { text: r.ok ? "✓" : "✗"; color: r.ok ? Theme.safe : Theme.danger; vertical-alignment: center; width: 16px; }
+            Text { text: r.name; vertical-alignment: center; overflow: elide; horizontal-stretch: 1; }
+            Text { text: Names.error(r.detail-code) + (r.detail != "" ? " (" + r.detail + ")" : ""); vertical-alignment: center; color: r.ok ? Theme.muted : Theme.danger; overflow: elide; }
+        }
+    }
+    HorizontalLayout {
+        alignment: end;
+        spacing: 10px;
+        Button { text: @tr("Back to results"); clicked => { root.back(); } }
+        Button { text: @tr("Scan again"); primary: true; clicked => { root.rescan(); } }
+    }
+}
+
+component SettingsPage inherits VerticalBox {
+    in-out property <string> large-gb;
+    in-out property <string> bulk-gb;
+    in-out property <string> stale-days;
+    in-out property <int> language;
+    in property <string> error;
+    callback save();
+    callback close();
+    alignment: start;
+    spacing: 12px;
+    Title { text: @tr("Settings"); }
+    GridLayout {
+        spacing: 10px;
+        Row {
+            Text { text: @tr("Large item threshold (GB)"); vertical-alignment: center; }
+            LineEdit { text <=> root.large-gb; input-type: decimal; accessible-label: @tr("Large item threshold (GB)"); }
+        }
+        Row {
+            Text { text: @tr("Bulk cleanup warning above (GB)"); vertical-alignment: center; }
+            LineEdit { text <=> root.bulk-gb; input-type: decimal; accessible-label: @tr("Bulk cleanup warning above (GB)"); }
+        }
+        Row {
+            Text { text: @tr("node_modules stale after (days)"); vertical-alignment: center; }
+            LineEdit { text <=> root.stale-days; input-type: number; accessible-label: @tr("node_modules stale after (days)"); }
+        }
+        Row {
+            Text { text: @tr("Language"); vertical-alignment: center; }
+            ComboBox {
+                model: [@tr("System default"), "Polski", "English"];
+                current-index <=> root.language;
+            }
+        }
+    }
+    if root.error != "": Text { text: @tr("Enter positive numbers for all thresholds."); color: Theme.danger; }
+    HorizontalLayout {
+        alignment: end;
+        spacing: 10px;
+        Button { text: @tr("Close"); clicked => { root.close(); } }
+        Button { text: @tr("Save"); primary: true; clicked => { root.save(); } }
+    }
+}
+
+component AboutPage inherits VerticalBox {
+    in property <string> version;
+    callback close();
+    alignment: center;
+    spacing: 12px;
+    Title { text: "FreeDiskCleaner " + root.version; horizontal-alignment: center; }
+    Text {
+        text: @tr("Free, open-source (MIT) disk cleaner for developers. No accounts, no network, no telemetry.");
+        wrap: word-wrap;
+        horizontal-alignment: center;
+    }
+    AboutSlint { }
+    HorizontalLayout {
+        alignment: center;
+        Button { text: @tr("Close"); clicked => { root.close(); } }
+    }
+}
+
+export component AppWindow inherits Window {
+    in property <bool> test-mode;
+    in property <string> test-root;
+    in-out property <Page> page: Page.home;
+    in property <string> version;
+
+    // home / scan
+    in property <bool> scanning;
+    in property <int> scan-files;
+    in property <string> scan-bytes;
+    in property <string> scan-current;
+    in property <string> scan-error;
+    in property <string> scan-root;
+    in property <bool> limited;
+    callback scan();
+    callback cancel-scan();
+
+    // onboarding
+    callback open-fda-settings();
+    callback recheck-fda();
+    callback skip-fda();
+
+    // results
+    in property <[GroupRow]> groups;
+    in property <string> current-group;
+    in property <[ItemRow]> rows;
+    in property <[MapRect]> map-rects;
+    in property <[string]> breadcrumb;
+    in property <string> group-note;
+    in property <int> sort-column: 1;
+    in property <bool> sort-ascending: false;
+    in property <int> selected-count;
+    in property <string> selected-size;
+    in property <bool> can-clean;
+    in property <bool> show-stale-actions;
+    in-out property <bool> map-mode;
+    in-out property <bool> skip-trash;
+    out property <length> map-width: results.map-width;
+    out property <length> map-height: results.map-height;
+    callback select-group(string);
+    callback toggle(int);
+    callback open(int);
+    callback up();
+    callback sort(int);
+    callback clean();
+    callback select-stale();
+    callback map-resized();
+
+    // confirm
+    in property <[PlanRow]> plan;
+    in property <string> plan-total;
+    in property <bool> plan-bulk;
+    in property <bool> plan-irreversible;
+    in property <bool> plan-docker;
+    in property <string> bulk-limit;
+    in property <string> large-limit;
+    in property <bool> plan-confirmed;
+    callback confirm-large(int);
+    callback run-clean();
+
+    // cleaning / done
+    in property <int> clean-done;
+    in property <int> clean-total;
+    in property <string> reclaimed;
+    in property <string> estimated;
+    in property <string> trashed;
+    in property <[ResultRow]> results-list;
+    in property <bool> done-docker;
+    callback rescan();
+
+    // settings
+    in-out property <string> set-large-gb;
+    in-out property <string> set-bulk-gb;
+    in-out property <string> set-stale-days;
+    in-out property <int> set-language;
+    in property <string> settings-error;
+    callback open-settings();
+    callback save-settings();
+
+    property <Page> return-page: Page.home;
+
+    title: @tr("FreeDiskCleaner");
+    preferred-width: 1100px;
+    preferred-height: 720px;
+    min-width: 800px;
+    min-height: 500px;
+
+    MenuBar {
+        Menu {
+            title: @tr("FreeDiskCleaner");
+            MenuItem { title: @tr("About FreeDiskCleaner"); activated => { root.show-about(); } }
+            MenuItem { title: @tr("Settings…"); activated => { root.open-settings(); root.show-settings(); } }
+        }
+    }
+
+    public function show-about() {
+        if root.page != Page.about && root.page != Page.settings { root.return-page = root.page; }
+        root.page = Page.about;
+    }
+    public function close-overlay() {
+        root.page = root.return-page;
+    }
+    public function show-settings() {
+        if root.page != Page.about && root.page != Page.settings { root.return-page = root.page; }
+        root.page = Page.settings;
+    }
+
+    VerticalLayout {
+        if root.test-mode: Rectangle {
+            height: 28px;
+            background: Theme.danger;
+            Text {
+                text: @tr("TEST MODE") + " · " + root.test-root;
+                color: white;
+                font-weight: 700;
+                overflow: elide;
+            }
+        }
+        HorizontalBox {
+            padding-top: 6px;
+            padding-bottom: 6px;
+            Text { text: "FreeDiskCleaner"; font-weight: 700; font-size: 15px; vertical-alignment: center; horizontal-stretch: 1; }
+            if root.page == Page.results: Button { text: @tr("Scan again"); clicked => { root.scan(); } }
+            Button { text: @tr("Settings"); clicked => { root.open-settings(); root.show-settings(); } }
+            Button { text: @tr("About"); clicked => { root.show-about(); } }
+        }
+        Rectangle {
+            vertical-stretch: 1;
+            if root.page == Page.onboarding: OnboardingPage {
+                open-settings => { root.open-fda-settings(); }
+                recheck => { root.recheck-fda(); }
+                skip => { root.skip-fda(); }
+            }
+            if root.page == Page.home: HomePage {
+                scanning: root.scanning;
+                files: root.scan-files;
+                bytes: root.scan-bytes;
+                current: root.scan-current;
+                error: root.scan-error;
+                scan-root: root.scan-root;
+                limited: root.limited;
+                scan => { root.scan(); }
+                cancel => { root.cancel-scan(); }
+            }
+            results := ResultsPage {
+                visible: root.page == Page.results;
+                groups: root.groups;
+                current-group: root.current-group;
+                rows: root.rows;
+                map-rects: root.map-rects;
+                breadcrumb: root.breadcrumb;
+                group-note: root.group-note;
+                sort-column: root.sort-column;
+                sort-ascending: root.sort-ascending;
+                selected-count: root.selected-count;
+                selected-size: root.selected-size;
+                can-clean: root.can-clean;
+                show-stale-actions: root.show-stale-actions;
+                map-mode <=> root.map-mode;
+                skip-trash <=> root.skip-trash;
+                select-group(k) => { root.select-group(k); }
+                toggle(i) => { root.toggle(i); }
+                open(i) => { root.open(i); }
+                up => { root.up(); }
+                sort(c) => { root.sort(c); }
+                clean => { root.clean(); }
+                select-stale => { root.select-stale(); }
+                map-resized => { root.map-resized(); }
+            }
+            if root.page == Page.confirm: ConfirmPage {
+                plan: root.plan;
+                total: root.plan-total;
+                bulk: root.plan-bulk;
+                irreversible: root.plan-irreversible;
+                has-docker: root.plan-docker;
+                bulk-limit: root.bulk-limit;
+                large-limit: root.large-limit;
+                all-confirmed: root.plan-confirmed;
+                confirm-large(i) => { root.confirm-large(i); }
+                cancel => { root.page = Page.results; }
+                run => { root.run-clean(); }
+            }
+            if root.page == Page.cleaning: VerticalBox {
+                alignment: center;
+                Spinner { indeterminate: true; width: 32px; height: 32px; }
+                Text { text: @tr("Cleaning {} of {}…", root.clean-done, root.clean-total); horizontal-alignment: center; }
+            }
+            if root.page == Page.done: DonePage {
+                reclaimed: root.reclaimed;
+                estimated: root.estimated;
+                trashed: root.trashed;
+                results: root.results-list;
+                has-docker: root.done-docker;
+                back => { root.page = Page.results; }
+                rescan => { root.rescan(); }
+            }
+            if root.page == Page.settings: SettingsPage {
+                large-gb <=> root.set-large-gb;
+                bulk-gb <=> root.set-bulk-gb;
+                stale-days <=> root.set-stale-days;
+                language <=> root.set-language;
+                error: root.settings-error;
+                save => { root.save-settings(); }
+                close => { root.page = root.return-page; }
+            }
+            if root.page == Page.about: AboutPage {
+                version: root.version;
+                close => { root.page = root.return-page; }
+            }
+        }
+    }
+}

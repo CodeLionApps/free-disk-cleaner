@@ -1,0 +1,265 @@
+import { CheckBox, Button, Palette } from "std-widgets.slint";
+import { RuleTexts } from "rule_texts.slint";
+
+// Status codes shared with Rust: 0 Safe, 1 Caution, 2 Do not touch, 3 unrecognized.
+export global Theme {
+    out property <color> safe: #2e9d4f;
+    out property <color> caution: #d89614;
+    out property <color> danger: #d92d20;
+    out property <color> unknown: #8e8e93;
+    out property <color> muted: Palette.foreground.with-alpha(0.6);
+    out property <color> surface: Palette.alternate-background;
+
+    public pure function status-color(status: int) -> color {
+        if status == 0 { return safe; }
+        if status == 1 { return caution; }
+        if status == 2 { return danger; }
+        return unknown;
+    }
+}
+
+// Every user-visible name that Rust only knows by code is translated here.
+export global Names {
+    public pure function group(key: string) -> string {
+        if key == "xcode" { return @tr("Xcode & iOS"); }
+        if key == "android" { return @tr("Android"); }
+        if key == "docker" { return @tr("Docker"); }
+        if key == "node" { return @tr("Node / JS"); }
+        if key == "brew" { return @tr("Homebrew & other"); }
+        if key == "sys-removable" { return @tr("System data: removable"); }
+        if key == "sys-critical" { return @tr("System data: critical"); }
+        if key == "stale" { return @tr("Stale node_modules"); }
+        if key == "all" { return @tr("All files"); }
+        return key;
+    }
+    public pure function command(kind: string) -> string {
+        if kind == "docker_build_cache" { return @tr("Docker build cache"); }
+        if kind == "docker_dangling_images" { return @tr("Dangling Docker images"); }
+        if kind == "docker_unused_images" { return @tr("Unused Docker images"); }
+        if kind == "docker_stopped_containers" { return @tr("Stopped Docker containers"); }
+        if kind == "docker_volumes" { return @tr("Unused Docker volumes"); }
+        if kind == "tm_snapshot" { return @tr("Time Machine local snapshot"); }
+        if kind == "simctl_unavailable" { return @tr("Unavailable simulators"); }
+        if kind == "simctl_runtime" { return @tr("Simulator runtime"); }
+        return kind;
+    }
+    public pure function error(code: string) -> string {
+        if code == "" { return ""; }
+        if code == "vanished" { return @tr("No longer exists"); }
+        if code == "symlink" { return @tr("Rejected: became a symlink"); }
+        if code == "rule-changed" { return @tr("Rejected: no longer matches its rule"); }
+        if code == "protected" { return @tr("Rejected: inside a protected location"); }
+        if code == "outside" { return @tr("Rejected: resolves outside the allowed area"); }
+        if code == "docker-not-running" { return @tr("Docker is not running"); }
+        if code == "command-failed" { return @tr("Command failed"); }
+        if code == "trashed" { return @tr("Moved to Trash"); }
+        if code == "deleted" { return @tr("Deleted"); }
+        if code == "ran" { return @tr("Command finished"); }
+        return @tr("Failed");
+    }
+}
+
+export struct ItemRow {
+    id: int,
+    kind: string,
+    name: string,
+    path: string,
+    size: string,
+    last-used: string,
+    rationale-key: string,
+    hint-key: string,
+    status: int,
+    selectable: bool,
+    selected: bool,
+    large: bool,
+    stale: bool,
+    command: string,
+    can-open: bool,
+}
+
+export struct GroupRow {
+    key: string,
+    size: string,
+    count: int,
+    critical: bool,
+}
+
+export struct MapRect {
+    id: int,
+    x: float,
+    y: float,
+    w: float,
+    h: float,
+    name: string,
+    size: string,
+    status: int,
+    can-open: bool,
+}
+
+export struct PlanRow {
+    id: int,
+    kind: string,
+    name: string,
+    size: string,
+    // "trash", "direct" or "command" (then `command` holds the exact command line)
+    method: string,
+    command: string,
+    large: bool,
+    confirmed: bool,
+}
+
+export struct ResultRow {
+    name: string,
+    detail-code: string,
+    detail: string,
+    ok: bool,
+}
+
+export component StatusBadge inherits Rectangle {
+    in property <int> status;
+    property <string> label: status == 0 ? @tr("Safe") : status == 1 ? @tr("Caution") : status == 2 ? @tr("Do not touch") : @tr("No recommendation");
+    border-radius: 4px;
+    background: Theme.status-color(status).with-alpha(0.18);
+    min-width: badge-text.preferred-width + 12px;
+    height: 20px;
+    accessible-role: text;
+    accessible-label: label;
+    badge-text := Text {
+        text: (root.status == 2 ? "! " : root.status == 1 ? "⚠ " : "") + root.label;
+        color: Theme.status-color(root.status);
+        font-size: 11px;
+        font-weight: 600;
+        vertical-alignment: center;
+        horizontal-alignment: center;
+    }
+}
+
+export component SortHeader inherits Rectangle {
+    in property <string> text;
+    in property <bool> active;
+    in property <bool> ascending;
+    callback clicked();
+    accessible-role: button;
+    accessible-label: text;
+    accessible-action-default => { clicked(); }
+    TouchArea { clicked => { root.clicked(); } }
+    Text {
+        x: 0;
+        text: root.text + (root.active ? (root.ascending ? " ▲" : " ▼") : "");
+        font-weight: 600;
+        color: Theme.muted;
+        vertical-alignment: center;
+    }
+}
+
+export component ItemRowView inherits Rectangle {
+    in property <ItemRow> item;
+    callback toggled(int);
+    callback open(int);
+    height: 56px;
+    background: item.selected ? Palette.selection-background.with-alpha(0.15) : transparent;
+
+    HorizontalLayout {
+        padding-left: 8px;
+        padding-right: 8px;
+        spacing: 10px;
+        alignment: stretch;
+        Rectangle {
+            width: 24px;
+            if root.item.selectable: CheckBox {
+                checked: root.item.selected;
+                accessible-label: @tr("Select {}", root.item.kind != "" ? Names.command(root.item.kind) : root.item.name);
+                toggled => { root.toggled(root.item.id); }
+            }
+        }
+        VerticalLayout {
+            alignment: center;
+            horizontal-stretch: 1;
+            min-width: 120px;
+            HorizontalLayout {
+                spacing: 6px;
+                Text {
+                    text: root.item.kind != "" ? Names.command(root.item.kind) + (root.item.name != "" ? " " + root.item.name : "") : root.item.name;
+                    font-weight: 600;
+                    overflow: elide;
+                    horizontal-stretch: 1;
+                }
+                if root.item.large: Text {
+                    text: @tr("LARGE");
+                    color: Theme.danger;
+                    font-size: 10px;
+                    font-weight: 700;
+                }
+                if root.item.stale: Text {
+                    text: @tr("STALE");
+                    color: Theme.caution;
+                    font-size: 10px;
+                    font-weight: 700;
+                }
+            }
+            Text {
+                text: root.item.command != "" ? "$ " + root.item.command : root.item.path;
+                font-size: 11px;
+                color: Theme.muted;
+                overflow: elide;
+            }
+            Text {
+                text: RuleTexts.text(root.item.rationale-key) + (root.item.hint-key != "" ? "  · " + RuleTexts.text(root.item.hint-key) : "");
+                font-size: 11px;
+                color: Theme.muted;
+                overflow: elide;
+            }
+        }
+        VerticalLayout {
+            alignment: center;
+            width: 130px;
+            StatusBadge { status: root.item.status; }
+        }
+        Text {
+            width: 90px;
+            text: root.item.last-used;
+            color: Theme.muted;
+            vertical-alignment: center;
+            font-size: 12px;
+        }
+        Text {
+            width: 80px;
+            text: root.item.size;
+            horizontal-alignment: right;
+            vertical-alignment: center;
+            font-weight: 600;
+        }
+        Rectangle {
+            width: 32px;
+            if root.item.can-open: Button {
+                text: "›";
+                accessible-label: @tr("Open {}", root.item.name);
+                clicked => { root.open(root.item.id); }
+            }
+        }
+    }
+    Rectangle {
+        y: parent.height - 1px;
+        height: 1px;
+        background: Palette.border.with-alpha(0.4);
+    }
+}
+
+export component Banner inherits Rectangle {
+    in property <string> text;
+    in property <color> tint;
+    border-radius: 6px;
+    background: tint.with-alpha(0.15);
+    border-color: tint;
+    border-width: 1px;
+    height: banner-text.preferred-height + 16px;
+    vertical-stretch: 0;
+    banner-text := Text {
+        x: 10px;
+        width: parent.width - 20px;
+        text: root.text;
+        wrap: word-wrap;
+        color: root.tint.darker(0.1);
+        vertical-alignment: center;
+    }
+}
