@@ -1,0 +1,44 @@
+{
+  "5E1F7C2A-9B3D-4E8F-A1C2-3D4E5F6A7B8C" : {
+    "build" : "20E247",
+    "deletable" : true,
+    "identifier" : "5E1F7C2A-9B3D-4E8F-A1C2-3D4E5F6A7B8C",
+    "kind" : "Disk Image",
+    "lastUsedAt" : "2025-11-03T09:12:44Z",
+    "mountPath" : "\/Library\/Developer\/CoreSimulator\/Volumes\/iOS_20E247",
+    "path" : "\/Library\/Developer\/CoreSimulator\/Images\/5E1F7C2A-9B3D-4E8F-A1C2-3D4E5F6A7B8C.dmg",
+    "platformIdentifier" : "com.apple.platform.iphonesimulator",
+    "runtimeBundlePath" : "\/Library\/Developer\/CoreSimulator\/Volumes\/iOS_20E247\/Library\/Developer\/CoreSimulator\/Profiles\/Runtimes\/iOS 16.4.simruntime",
+    "runtimeIdentifier" : "com.apple.CoreSimulator.SimRuntime.iOS-16-4",
+    "signatureState" : "Verified",
+    "sizeBytes" : 7134511104,
+    "state" : "Ready",
+    "version" : "16.4"
+  },
+  "A9B8C7D6-E5F4-4321-8765-0FEDCBA98765" : {
+    "build" : "23A339",
+    "deletable" : true,
+    "identifier" : "A9B8C7D6-E5F4-4321-8765-0FEDCBA98765",
+    "kind" : "Disk Image",
+    "lastUsedAt" : "2026-10-19T16:40:02Z",
+    "mountPath" : "\/Library\/Developer\/CoreSimulator\/Volumes\/iOS_23A339",
+    "path" : "\/Library\/Developer\/CoreSimulator\/Images\/A9B8C7D6-E5F4-4321-8765-0FEDCBA98765.dmg",
+    "platformIdentifier" : "com.apple.platform.iphonesimulator",
+    "runtimeBundlePath" : "\/Library\/Developer\/CoreSimulator\/Volumes\/iOS_23A339\/Library\/Developer\/CoreSimulator\/Profiles\/Runtimes\/iOS 26.0.simruntime",
+    "runtimeIdentifier" : "com.apple.CoreSimulator.SimRuntime.iOS-26-0",
+    "signatureState" : "Verified",
+    "sizeBytes" : 9012345678,
+    "state" : "Ready",
+    "version" : "26.0"
+  },
+  "11112222-3333-4444-5555-666677778888" : {
+    "build" : "21R355",
+    "deletable" : false,
+    "identifier" : "11112222-3333-4444-5555-666677778888",
+    "kind" : "Bundled with Xcode",
+    "platformIdentifier" : "com.apple.platform.xrsimulator",
+    "runtimeIdentifier" : "com.apple.CoreSimulator.SimRuntime.xrOS-1-0",
+    "state" : "Ready",
+    "version" : "1.0"
+  }
+}

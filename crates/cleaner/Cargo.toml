@@ -1,0 +1,18 @@
+[package]
+name = "fdc-cleaner"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+fdc-core.workspace = true
+thiserror.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+trash = "5.2.9"
+tracing.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+proptest.workspace = true
