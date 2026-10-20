@@ -1,0 +1,5 @@
+/target
+/fixtures-out
+*.p12
+*.p8
+.DS_Store
