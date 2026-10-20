@@ -15,10 +15,12 @@ concurrency:
 jobs:
   release:
     runs-on: macos-15
-    env:
-      KEYCHAIN: ${{ runner.temp }}/fdc-signing.keychain-db
-      API_KEY_FILE: ${{ runner.temp }}/fdc-AuthKey.p8
     steps:
+      # `runner` context is not available in job-level env, so set the paths here.
+      - name: Signing paths
+        run: |
+          echo "KEYCHAIN=$RUNNER_TEMP/fdc-signing.keychain-db" >> "$GITHUB_ENV"
+          echo "API_KEY_FILE=$RUNNER_TEMP/fdc-AuthKey.p8" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
